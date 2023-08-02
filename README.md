@@ -26,7 +26,7 @@ Before first run, edit the script and adjust the configurable constants to your 
 To use the script, you need to pass the channel name as an argument and optionally specify the stream quality:
 
 `
-python <script_name.py> <channel_name> --quality <quality>
+python twdl_resilient.py <channel_name> --quality <quality>
 `
 
 Available Arguments:
