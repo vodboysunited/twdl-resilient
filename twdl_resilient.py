@@ -42,6 +42,10 @@ def log_disconnect(disconnects_log, disconnects, uptime, segments):
     disconnects_log.write(f"Disconnect {disconnects + 1}: Uptime: {uptime} | Segments: {segments}\n")
     disconnects_log.flush()
 
+def trunc_to_fit(output):
+    terminal_width = os.get_terminal_size().columns
+    return output[:terminal_width]
+
 def main():
     loading_symbols = ['|', '/', '-', '\\']
     loading_index = 0
@@ -65,7 +69,8 @@ def main():
                     ffmpeg_process.terminate()
                     ffmpeg_process = None
                 loading_symbol = loading_symbols[loading_index % len(loading_symbols)]
-                print(f"\033[93mStream not available yet. Retrying in {REFRESH_INTERVAL} seconds... {loading_symbol}\033[0m", end='\r')
+                message = f"\033[93mStream not available yet. Retrying in {REFRESH_INTERVAL} seconds... {loading_symbol}\033[0m"
+                print(trunc_to_fit(message), end='\r')
                 time.sleep(REFRESH_INTERVAL)
                 loading_index += 1
             else:
@@ -73,6 +78,7 @@ def main():
                     start_time = datetime.datetime.now()
                     print("\033[95mStream is live! Starting to create HLS segments...\033[0m")
                     directory = create_directory(args.channel_name)
+                    print(f"Output Directory: \033[93m{directory}\033[0m")
                     disconnects_log = open(os.path.join(directory, 'disconnects.log'), 'w')
                     ffmpeg_process = capture_stream(stream_url, directory)
                 elif ffmpeg_process is not None and ffmpeg_process.poll() is not None:
@@ -84,7 +90,8 @@ def main():
                 if ffmpeg_process is not None and ffmpeg_process.poll() is None:
                     uptime = str(datetime.datetime.now() - start_time)[:-7]
                     segments = len([name for name in os.listdir(directory) if name.endswith('.ts')])
-                    print(f"\033[91mRECORDING\033[0m: \033[92m{args.channel_name}\033[0m ({args.quality}) | Uptime: \033[92m{uptime}\033[0m | Segments: \033[92m{segments}\033[0m | Disconnects: \033[92m{disconnects}\033[0m | Output: \033[92m{directory}\033[0m", end='\r', flush=True)
+                    status_output = f"\033[91mRECORDING\033[0m: \033[92m{args.channel_name}\033[0m ({args.quality}) | Uptime: \033[92m{uptime}\033[0m | Segments: \033[92m{segments}\033[0m | Disconnects: \033[91m{disconnects}\033[0m"
+                    print(trunc_to_fit(status_output), end='\r', flush=True)
                     time.sleep(1)
     except KeyboardInterrupt:
         print(f"\nScript terminated by user. Total uptime: {uptime} | Total segments created: {segments} | Total disconnects: {disconnects}")
@@ -92,6 +99,7 @@ def main():
             ffmpeg_process.terminate()
         if disconnects_log is not None:
             disconnects_log.close()
+
 
 if __name__ == "__main__":
     main()
