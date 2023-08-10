@@ -98,6 +98,7 @@ def main():
         if ffmpeg_process is not None:
             ffmpeg_process.terminate()
         if disconnects_log is not None:
+            disconnects_log.write(f"Total Uptime: {uptime} | Total Segments: {segments} | Total Disconnects: {disconnects}")
             disconnects_log.close()
 
 
